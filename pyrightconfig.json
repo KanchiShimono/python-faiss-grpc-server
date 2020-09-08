@@ -1,0 +1,30 @@
+{
+  "include": [
+    "python",
+    "tests"
+  ],
+  "exclude": [
+    "**/__pycache__"
+  ],
+  "strictListInference": true,
+  "strictDictionaryInference":true,
+  "strictParameterNoneValue": true,
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": true,
+  "reportUnusedClass": true,
+  "reportUnusedFunction": true,
+  "reportUnusedVariable": true,
+  "reportDuplicateImport": true,
+  "executionEnvironments": [
+    {
+      "root": "python"
+    },
+    {
+      "root": "tests",
+      "extraPaths": [
+        "python"
+      ]
+    }
+  ]
+}
