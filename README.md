@@ -53,7 +53,18 @@ You can run following command or directory running on interpreter.
 
 ```sh
 cd examples
-python client.py
+
+# show usage of client example
+python client.py -h
+
+# show heatbeat message
+python client.py heatbeat
+
+# search by query, get numer of neighbors given value (query is auto generated in command as identity vector)
+python client.py search 10
+
+# search by specified id, get numer of neighbors given value
+python client.py search-by-id 0 10
 ```
 
 ## Development
