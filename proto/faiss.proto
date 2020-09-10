@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package faiss;
+
+import "google/protobuf/empty.proto";
+
+message Neighbor {
+    uint64 id = 1;
+    float score = 2;
+}
+
+message Vector {
+    repeated float val = 1;
+}
+
+message SearchRequest {
+    Vector query = 1;
+    uint64 k = 2;
+}
+
+message SearchResponse {
+    repeated Neighbor neighbors = 1;
+}
+
+message SearchByIdRequest {
+    uint64 id = 1;
+    uint64 k = 2;
+}
+
+message SearchByIdResponse {
+    uint64 request_id = 1;
+    repeated Neighbor neighbors = 2;
+}
+
+message HeatbeatResponse {
+    string message = 1;
+}
+
+service FaissService {
+    rpc Heatbeat (google.protobuf.Empty) returns (HeatbeatResponse);
+    rpc Search(SearchRequest) returns (SearchResponse);
+    rpc SearchById(SearchByIdRequest) returns (SearchByIdResponse);
+}
