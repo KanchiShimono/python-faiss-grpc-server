@@ -23,13 +23,13 @@ python python/faiss_grpc/main.py
 Python Faiss gRPC server has some environment variables starts with prefix `FAISS_GRPC_`.
 
 | Variable                   | Default | Description                                                            | Required |
-| :------------------------- | :------ | :--------------------------------------------------------------------- | -------- |
-| FAISS_GRPC_INDEX_PATH      | -       | Path to Faiss index                                                    | o        |
-| FAISS_GRPC_NORMALIZE_QUERY | False   | Normalize query for search (This is useful to cosine distance metrics) | x        |
-| FAISS_GRPC_NPROBE          | None    | Faiss nprobe parameter                                                 | x        |
-| FAISS_GRPC_HOST            | [::]    | gRPC server host                                                       | x        |
-| FAISS_GRPC_PORT            | 50051   | gRPC server listening port                                             | x        |
-| FAISS_GRPC_MAX_WORKERS     | 10      | Maximum number of gRPC server workers                                  | x        |
+| :------------------------- | :------ | :--------------------------------------------------------------------- | :------: |
+| FAISS_GRPC_INDEX_PATH      | -       | Path to Faiss index                                                    |    o     |
+| FAISS_GRPC_NORMALIZE_QUERY | False   | Normalize query for search (This is useful to cosine distance metrics) |    x     |
+| FAISS_GRPC_NPROBE          | None    | Faiss nprobe parameter                                                 |    x     |
+| FAISS_GRPC_HOST            | [::]    | gRPC server host                                                       |    x     |
+| FAISS_GRPC_PORT            | 50051   | gRPC server listening port                                             |    x     |
+| FAISS_GRPC_MAX_WORKERS     | 10      | Maximum number of gRPC server workers                                  |    x     |
 
 #### Support .env file
 
@@ -49,7 +49,7 @@ FAISS_GRPC_MAX_WORKERS=2
 ## Examples
 
 Client side code is under the `examples/client.py`.
-You can run following command or directory running on interpreter.
+You can run following command or directly running on interpreter.
 
 ```sh
 cd examples
