@@ -38,7 +38,7 @@ class FaissServiceServicer(FaissServiceServicer):
         self.index = index
         self.config = config
         if self.config.nprobe:
-            self.index.nprobe
+            self.index.nprobe = self.config.nprobe
 
     def Search(self, request, context) -> SearchResponse:
         query = np.atleast_2d(np.array(request.query.val, dtype=np.float32))
