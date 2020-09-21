@@ -1,4 +1,3 @@
-from argparse import ArgumentError
 from concurrent import futures
 from dataclasses import dataclass
 from typing import List, Optional
@@ -49,7 +48,7 @@ class FaissServiceServicer(FaissServiceServicer):
                 f'expected {self.index.d} but passed {query.shape[1]}'
             )
             context.set_details(msg)
-            raise ArgumentError(msg)
+            return SearchResponse()
 
         if self.config.normalize_query:
             query = self.normalize(query)
@@ -67,9 +66,10 @@ class FaissServiceServicer(FaissServiceServicer):
         request_id = request.id
         maximum_id = self.index.ntotal - 1
         if not (0 <= request_id <= maximum_id):
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             msg = f'request id must be 0 <= id <= {maximum_id}'
             context.set_details(msg)
-            raise ArgumentError(msg)
+            return SearchByIdResponse()
 
         query = self.index.reconstruct_n(request_id, 1)
 
