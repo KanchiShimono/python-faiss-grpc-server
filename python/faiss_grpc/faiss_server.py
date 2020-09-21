@@ -6,12 +6,13 @@ from typing import List, Optional
 import faiss
 import grpc
 import numpy as np
+from faiss import Index
 
 from faiss_grpc.proto.faiss_pb2 import (
     HeatbeatResponse,
     Neighbor,
-    SearchResponse,
     SearchByIdResponse,
+    SearchResponse,
 )
 from faiss_grpc.proto.faiss_pb2_grpc import (
     FaissServiceServicer,
@@ -33,8 +34,8 @@ class FaissServiceConfig:
 
 
 class FaissServiceServicer(FaissServiceServicer):
-    def __init__(self, index_path: str, config: FaissServiceConfig) -> None:
-        self.index = faiss.read_index(index_path)
+    def __init__(self, index: Index, config: FaissServiceConfig) -> None:
+        self.index = index
         self.config = config
         if self.config.nprobe:
             self.index.nprobe
@@ -96,11 +97,12 @@ class Server:
         server_config: ServerConfig,
         service_config: FaissServiceConfig,
     ) -> None:
+        index = faiss.read_index(index_path)
         self.server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=server_config.max_workers)
         )
         add_FaissServiceServicer_to_server(
-            FaissServiceServicer(index_path, service_config), self.server
+            FaissServiceServicer(index, service_config), self.server
         )
         self.server.add_insecure_port(
             f'{server_config.host}:{server_config.port}'
