@@ -1,7 +1,9 @@
+import os
+import tempfile
 import unittest
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Any, List
+from typing import Any, List, Union
 
 import faiss
 import grpc
@@ -12,8 +14,13 @@ from google.protobuf.empty_pb2 import Empty
 from google.protobuf.pyext._message import MethodDescriptor
 from grpc_testing._server._server import _Server
 
-from faiss_grpc.faiss_server import FaissServiceConfig, FaissServiceServicer
-from faiss_grpc.proto import faiss_pb2
+from faiss_grpc.faiss_server import (
+    FaissServiceConfig,
+    FaissServiceServicer,
+    Server,
+    ServerConfig,
+)
+from faiss_grpc.proto import faiss_pb2, faiss_pb2_grpc
 from faiss_grpc.proto.faiss_pb2 import (
     HeatbeatResponse,
     Neighbor,
@@ -23,6 +30,8 @@ from faiss_grpc.proto.faiss_pb2 import (
     SearchResponse,
     Vector,
 )
+
+VectorLike = Union[List[float], np.ndarray]
 
 
 @dataclass(frozen=True)
@@ -39,10 +48,55 @@ class ServiceMethodDescriptor(Enum):
     heatbeat = 'Heatbeat'
 
 
-class TestFaissServiceServicer(unittest.TestCase):
+class GrpcClientForTesting:
+    def __init__(self) -> None:
+        channel = grpc.insecure_channel('localhost:50051')
+        self._stub = faiss_pb2_grpc.FaissServiceStub(channel)
+
+    @property
+    def stub(self) -> faiss_pb2_grpc.FaissServiceStub:
+        return self._stub
+
+    def search(self, query: VectorLike, k: int) -> SearchResponse:
+        vec = faiss_pb2.Vector(val=query)
+        req = faiss_pb2.SearchRequest(query=vec, k=k)
+        return self.stub.Search(req)
+
+    def search_by_id(self, request_id: int, k: int) -> SearchByIdResponse:
+        req = faiss_pb2.SearchByIdRequest(id=request_id, k=k)
+        return self.stub.SearchById(req)
+
+    def heatbeat(self) -> HeatbeatResponse:
+        return self.stub.Heatbeat(Empty())
+
+
+class BaseTestCase(unittest.TestCase):
+    FAISS_CONFIG: FaissConfig
+
+    @classmethod
+    def create_index(cls) -> Index:
+        # following code is same as sample of faiss github wiki
+        #   https://github.com/facebookresearch/faiss/wiki/Getting-started
+        #   https://github.com/facebookresearch/faiss/wiki/Faster-search
+        d = cls.FAISS_CONFIG.dim
+        nb = cls.FAISS_CONFIG.db_size
+        np.random.seed(1234)
+        xb = np.random.random((nb, d)).astype('float32')
+        xb[:, 0] += np.arange(nb) / 1000.0
+
+        nlist = cls.FAISS_CONFIG.nlist
+        quantizer = faiss.IndexFlatL2(d)
+        index = faiss.IndexIVFFlat(quantizer, d, nlist)
+        index.train(xb)
+        index.add(xb)
+
+        return index
+
+
+class TestFaissServiceServicer(BaseTestCase):
+    # FAISS_CONFIG is defined in BaseTestCase
     CONFIG: FaissServiceConfig
     CONFIG_NORM: FaissServiceConfig
-    FAISS_CONFIG: FaissConfig
     INDEX: Index
     SERVICE: Any
     SERVER: _Server
@@ -68,6 +122,7 @@ class TestFaissServiceServicer(unittest.TestCase):
             },
             grpc_testing.strict_real_time(),
         )
+        # server for normalize_query is True
         cls.SERVER_NORM = grpc_testing.server_from_dictionary(
             {
                 cls.SERVICE: FaissServiceServicer(
@@ -83,25 +138,6 @@ class TestFaissServiceServicer(unittest.TestCase):
         self, method: ServiceMethodDescriptor
     ) -> MethodDescriptor:
         return self.SERVICE.methods_by_name[method.value]
-
-    @classmethod
-    def create_index(cls) -> Index:
-        # following code is same as sample of faiss github wiki
-        #   https://github.com/facebookresearch/faiss/wiki/Getting-started
-        #   https://github.com/facebookresearch/faiss/wiki/Faster-search
-        d = cls.FAISS_CONFIG.dim
-        nb = cls.FAISS_CONFIG.db_size
-        np.random.seed(1234)
-        xb = np.random.random((nb, d)).astype('float32')
-        xb[:, 0] += np.arange(nb) / 1000.0
-
-        nlist = cls.FAISS_CONFIG.nlist
-        quantizer = faiss.IndexFlatL2(d)
-        index = faiss.IndexIVFFlat(quantizer, d, nlist)
-        index.train(xb)
-        index.add(xb)
-
-        return index
 
     @staticmethod
     def to_neighbors(distances: np.ndarray, ids: np.ndarray) -> List[Neighbor]:
@@ -283,6 +319,55 @@ class TestFaissServiceServicer(unittest.TestCase):
 
         self.assertEqual(HeatbeatResponse(message='OK'), response)
         self.assertIs(code, grpc.StatusCode.OK)
+
+
+class TestServer(BaseTestCase):
+    # FAISS_CONFIG is defined in BaseTestCase
+    SERVER_CONFIG: ServerConfig
+    SERVICE_CONFIG: FaissServiceConfig
+    CLIENT: GrpcClientForTesting
+    SERVER: Server
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.SERVER_CONFIG = ServerConfig()
+        cls.SERVICE_CONFIG = FaissServiceConfig(nprobe=10)
+        cls.FAISS_CONFIG = FaissConfig(dim=64, db_size=100000, nlist=100)
+        cls.CLIENT = GrpcClientForTesting()
+
+        index = cls.create_index()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            index_path = os.path.join(temp_dir, 'index.faiss')
+            faiss.write_index(index, index_path)
+            cls.SERVER = Server(
+                index_path=index_path,
+                server_config=cls.SERVER_CONFIG,
+                service_config=cls.SERVICE_CONFIG,
+            )
+
+        cls.SERVER.server.start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.SERVER.server.stop(None)
+
+    def test_serve_search(self) -> None:
+        k = 10
+        response = self.CLIENT.search(
+            np.ones(self.FAISS_CONFIG.dim, dtype=np.float32), k=k
+        )
+        self.assertEqual(len(response.neighbors), k)
+
+    def test_serve_search_by_id(self) -> None:
+        request_id = 0
+        k = 10
+        response = self.CLIENT.search_by_id(request_id=request_id, k=k)
+        self.assertEqual(response.request_id, request_id)
+        self.assertEqual(len(response.neighbors), k)
+
+    def test_serve_heatbeat(self) -> None:
+        response = self.CLIENT.heatbeat()
+        self.assertEqual(response, HeatbeatResponse(message='OK'))
 
 
 if __name__ == "__main__":
