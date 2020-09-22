@@ -20,7 +20,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
     serialized_pb=b'\n\x0b\x66\x61iss.proto\x12\x05\x66\x61iss\x1a\x1bgoogle/protobuf/empty.proto\"%\n\x08Neighbor\x12\n\n\x02id\x18\x01 \x01(\x04\x12\r\n\x05score\x18\x02 \x01(\x02\"\x15\n\x06Vector\x12\x0b\n\x03val\x18\x01 \x03(\x02\"8\n\rSearchRequest\x12\x1c\n\x05query\x18\x01 \x01(\x0b\x32\r.faiss.Vector\x12\t\n\x01k\x18\x02 \x01(\x04\"4\n\x0eSearchResponse\x12\"\n\tneighbors\x18\x01 \x03(\x0b\x32\x0f.faiss.Neighbor\"*\n\x11SearchByIdRequest\x12\n\n\x02id\x18\x01 \x01(\x04\x12\t\n\x01k\x18\x02 \x01(\x04\"L\n\x12SearchByIdResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\x04\x12\"\n\tneighbors\x18\x02 \x03(\x0b\x32\x0f.faiss.Neighbor\"#\n\x10HeatbeatResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\xc5\x01\n\x0c\x46\x61issService\x12;\n\x08Heatbeat\x12\x16.google.protobuf.Empty\x1a\x17.faiss.HeatbeatResponse\x12\x35\n\x06Search\x12\x14.faiss.SearchRequest\x1a\x15.faiss.SearchResponse\x12\x41\n\nSearchById\x12\x18.faiss.SearchByIdRequest\x1a\x19.faiss.SearchByIdResponseb\x06proto3',
-    dependencies=[google_dot_protobuf_dot_empty__pb2.DESCRIPTOR,],
+    dependencies=[
+        google_dot_protobuf_dot_empty__pb2.DESCRIPTOR,
+    ],
 )
 
 
