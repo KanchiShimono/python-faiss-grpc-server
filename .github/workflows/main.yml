@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    name: Static analysis by flake8, black and isort
+    name: Static analysis
     runs-on: ubuntu-latest
     strategy:
       matrix:
