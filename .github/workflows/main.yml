@@ -1,0 +1,60 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    name: Static analysis by flake8, black and isort
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8.x", "3.9.x"]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Install Python dependencies
+        run: |
+          pip install '.[test]'
+
+      - name: Check by black
+        run: |
+          pip install '.[test]'
+
+      - name: Check by flake8
+        run: |
+          flake8 python tests
+
+      - name: Check by isort
+        run: |
+          isort **/*.py --check-only --verbose
+
+      - name: Check by black
+        run: |
+          black --check python tests
+
+  test:
+    name: Unit testing
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8.x", "3.9.x"]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Run unit testing by unittest
+        run: |
+          python -m unittest discover -v -s ./tests/ -p "*test*.py"
