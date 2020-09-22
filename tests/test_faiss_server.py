@@ -1,7 +1,7 @@
 import unittest
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import List
+from typing import Any, List
 
 import faiss
 import grpc
@@ -10,6 +10,7 @@ import numpy as np
 from faiss import Index
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.pyext._message import MethodDescriptor
+from grpc_testing._server._server import _Server
 
 from faiss_grpc.faiss_server import FaissServiceConfig, FaissServiceServicer
 from faiss_grpc.proto import faiss_pb2
@@ -39,52 +40,62 @@ class ServiceMethodDescriptor(Enum):
 
 
 class TestFaissServiceServicer(unittest.TestCase):
-    def setUp(self) -> None:
+    CONFIG: FaissServiceConfig
+    CONFIG_NORM: FaissServiceConfig
+    FAISS_CONFIG: FaissConfig
+    INDEX: Index
+    SERVICE: Any
+    SERVER: _Server
+    SERVER_NORM: _Server
+
+    @classmethod
+    def setUpClass(cls) -> None:
         nprobe = 10
-        self.config = FaissServiceConfig(nprobe=nprobe, normalize_query=False)
-        self.config_norm = FaissServiceConfig(
+        cls.CONFIG = FaissServiceConfig(nprobe=nprobe, normalize_query=False)
+        cls.CONFIG_NORM = FaissServiceConfig(
             nprobe=nprobe, normalize_query=True
         )
-        self.faiss_config = FaissConfig(dim=64, db_size=100000, nlist=100)
-        self.index = self.create_index()
-        self.service = faiss_pb2.DESCRIPTOR.services_by_name['FaissService']
+        cls.FAISS_CONFIG = FaissConfig(dim=64, db_size=100000, nlist=100)
+        cls.INDEX = cls.create_index()
+        cls.SERVICE = faiss_pb2.DESCRIPTOR.services_by_name['FaissService']
         # faiss index must be cloned, because index attribute will be changed
         # FaissServiceServicer constructor (e.g. nprobe)
-        self.server = grpc_testing.server_from_dictionary(
+        cls.SERVER = grpc_testing.server_from_dictionary(
             {
-                self.service: FaissServiceServicer(
-                    faiss.clone_index(self.index), self.config
+                cls.SERVICE: FaissServiceServicer(
+                    faiss.clone_index(cls.INDEX), cls.CONFIG
                 )
             },
             grpc_testing.strict_real_time(),
         )
-        self.server_norm = grpc_testing.server_from_dictionary(
+        cls.SERVER_NORM = grpc_testing.server_from_dictionary(
             {
-                self.service: FaissServiceServicer(
-                    faiss.clone_index(self.index), self.config_norm
+                cls.SERVICE: FaissServiceServicer(
+                    faiss.clone_index(cls.INDEX), cls.CONFIG_NORM
                 )
             },
             grpc_testing.strict_real_time(),
         )
         # set nprobe, after complete cloning index
-        self.index.nprobe = nprobe
+        cls.INDEX.nprobe = nprobe
 
     def method_descriptor_by_name(
         self, method: ServiceMethodDescriptor
     ) -> MethodDescriptor:
-        return self.service.methods_by_name[method.value]
+        return self.SERVICE.methods_by_name[method.value]
 
-    def create_index(self) -> Index:
+    @classmethod
+    def create_index(cls) -> Index:
         # following code is same as sample of faiss github wiki
         #   https://github.com/facebookresearch/faiss/wiki/Getting-started
         #   https://github.com/facebookresearch/faiss/wiki/Faster-search
-        d = self.faiss_config.dim
-        nb = self.faiss_config.db_size
+        d = cls.FAISS_CONFIG.dim
+        nb = cls.FAISS_CONFIG.db_size
         np.random.seed(1234)
         xb = np.random.random((nb, d)).astype('float32')
         xb[:, 0] += np.arange(nb) / 1000.0
 
-        nlist = self.faiss_config.nlist
+        nlist = cls.FAISS_CONFIG.nlist
         quantizer = faiss.IndexFlatL2(d)
         index = faiss.IndexIVFFlat(quantizer, d, nlist)
         index.train(xb)
@@ -106,17 +117,17 @@ class TestFaissServiceServicer(unittest.TestCase):
         # if both nprobe and k are set small, search result would be same, even
         # if failed to set nprobe on server side.
         k = 1000
-        val = np.ones(self.faiss_config.dim, dtype=np.float32)
+        val = np.ones(self.FAISS_CONFIG.dim, dtype=np.float32)
         vector = Vector(val=val)
         request = SearchRequest(query=vector, k=k)
-        rpc = self.server.invoke_unary_unary(
+        rpc = self.SERVER.invoke_unary_unary(
             self.method_descriptor_by_name(ServiceMethodDescriptor.search),
             (),
             request,
             None,
         )
 
-        distances, ids = self.index.search(np.atleast_2d(val), k)
+        distances, ids = self.INDEX.search(np.atleast_2d(val), k)
         expected = SearchResponse(neighbors=self.to_neighbors(distances, ids))
 
         response, _, code, _ = rpc.termination()
@@ -130,10 +141,10 @@ class TestFaissServiceServicer(unittest.TestCase):
         # if both nprobe and k are set small, search result would be same, even
         # if failed to set nprobe on server side.
         k = 1000
-        val = np.ones(self.faiss_config.dim, dtype=np.float32)
+        val = np.ones(self.FAISS_CONFIG.dim, dtype=np.float32)
         vector = Vector(val=val)
         request = SearchRequest(query=vector, k=k)
-        rpc = self.server.invoke_unary_unary(
+        rpc = self.SERVER.invoke_unary_unary(
             self.method_descriptor_by_name(ServiceMethodDescriptor.search),
             (),
             request,
@@ -141,7 +152,7 @@ class TestFaissServiceServicer(unittest.TestCase):
         )
 
         # set different nprobe
-        index = faiss.clone_index(self.index)
+        index = faiss.clone_index(self.INDEX)
         index.nprobe = 1
         distances, ids = index.search(np.atleast_2d(val), k)
         unexpected = SearchResponse(
@@ -159,11 +170,11 @@ class TestFaissServiceServicer(unittest.TestCase):
         # if both nprobe and k are set small, search result would be same, even
         # if failed to set nprobe on server side.
         k = 1000
-        val = np.ones(self.faiss_config.dim, dtype=np.float32)
+        val = np.ones(self.FAISS_CONFIG.dim, dtype=np.float32)
         vector = Vector(val=val)
         request = SearchRequest(query=vector, k=k)
         # calling server set normalize_query is True
-        rpc = self.server_norm.invoke_unary_unary(
+        rpc = self.SERVER_NORM.invoke_unary_unary(
             self.method_descriptor_by_name(ServiceMethodDescriptor.search),
             (),
             request,
@@ -172,7 +183,7 @@ class TestFaissServiceServicer(unittest.TestCase):
 
         # normalize query vector
         norm_val = val / np.linalg.norm(val)
-        distances, ids = self.index.search(np.atleast_2d(norm_val), k)
+        distances, ids = self.INDEX.search(np.atleast_2d(norm_val), k)
         expected = SearchResponse(neighbors=self.to_neighbors(distances, ids))
 
         response, _, code, _ = rpc.termination()
@@ -182,10 +193,10 @@ class TestFaissServiceServicer(unittest.TestCase):
 
     def test_failed_illegal_query_dimension_Search(self) -> None:
         k = 10
-        val = np.ones(self.faiss_config.dim * 2, dtype=np.float32)
+        val = np.ones(self.FAISS_CONFIG.dim * 2, dtype=np.float32)
         vector = Vector(val=val)
         request = SearchRequest(query=vector, k=k)
-        rpc = self.server.invoke_unary_unary(
+        rpc = self.SERVER.invoke_unary_unary(
             self.method_descriptor_by_name(ServiceMethodDescriptor.search),
             (),
             request,
@@ -197,7 +208,7 @@ class TestFaissServiceServicer(unittest.TestCase):
         self.assertRegex(
             details,
             f'query vector dimension mismatch expected '
-            f'{self.faiss_config.dim} but passed {self.faiss_config.dim*2}',
+            f'{self.FAISS_CONFIG.dim} but passed {self.FAISS_CONFIG.dim*2}',
         )
         # exptected empty SearchResponse
         self.assertEqual(response, SearchResponse())
@@ -211,7 +222,7 @@ class TestFaissServiceServicer(unittest.TestCase):
         request_id = 0
         k = 1000
         request = SearchByIdRequest(id=request_id, k=k)
-        rpc = self.server.invoke_unary_unary(
+        rpc = self.SERVER.invoke_unary_unary(
             self.method_descriptor_by_name(
                 ServiceMethodDescriptor.search_by_id
             ),
@@ -220,9 +231,9 @@ class TestFaissServiceServicer(unittest.TestCase):
             None,
         )
 
-        query = self.index.reconstruct_n(request_id, 1)
+        query = self.INDEX.reconstruct_n(request_id, 1)
         # search k + 1 considering remove request_id itself
-        distances, ids = self.index.search(query, k + 1)
+        distances, ids = self.INDEX.search(query, k + 1)
         neighbors = [
             n for n in self.to_neighbors(distances, ids) if n.id != request_id
         ]
@@ -237,10 +248,10 @@ class TestFaissServiceServicer(unittest.TestCase):
 
     def test_failed_unknown_id_SearchById(self) -> None:
         # set unknown id
-        request_id = self.faiss_config.db_size * 2
+        request_id = self.FAISS_CONFIG.db_size * 2
         k = 10
         request = SearchByIdRequest(id=request_id, k=k)
-        rpc = self.server.invoke_unary_unary(
+        rpc = self.SERVER.invoke_unary_unary(
             self.method_descriptor_by_name(
                 ServiceMethodDescriptor.search_by_id
             ),
@@ -253,7 +264,7 @@ class TestFaissServiceServicer(unittest.TestCase):
 
         self.assertRegex(
             details,
-            f'request id must be 0 <= id <= {self.faiss_config.db_size-1}',
+            f'request id must be 0 <= id <= {self.FAISS_CONFIG.db_size-1}',
         )
         # exptected empty SearchByIdResponse
         self.assertEqual(response, SearchByIdResponse())
@@ -261,7 +272,7 @@ class TestFaissServiceServicer(unittest.TestCase):
 
     def test_successful_Heatbeat(self) -> None:
         request = Empty()
-        rpc = self.server.invoke_unary_unary(
+        rpc = self.SERVER.invoke_unary_unary(
             self.method_descriptor_by_name(ServiceMethodDescriptor.heatbeat),
             (),
             request,

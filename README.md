@@ -1,5 +1,7 @@
 # python-faiss-grpc-server
 
+[![GitHub Actions Status](https://github.com/KanchiShimono/python-faiss-grpc-server/workflows/Build/badge.svg)](https://github.com/KanchiShimono/python-faiss-grpc-server/actions?query=workflow%3ABuild)
+
 Python gRPC server for apploximate nearest neighbor by [Faiss](https://github.com/facebookresearch/faiss).
 
 ## Installation
