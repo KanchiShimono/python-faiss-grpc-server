@@ -3,7 +3,7 @@
 import grpc
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
-import faiss_pb2 as faiss__pb2
+import faiss_pb2 as faiss__pb2  # isort:skip
 
 
 class FaissServiceStub(object):
