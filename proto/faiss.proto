@@ -49,15 +49,15 @@ message SearchByIdResponse {
     repeated Neighbor neighbors = 2;
 }
 
-// Response of heatbeat.
-message HeatbeatResponse {
+// Response of heartbeat.
+message HeartbeatResponse {
     // Return OK if server is working.
     string message = 1;
 }
 
 service FaissService {
     // Check server is working.
-    rpc Heatbeat (google.protobuf.Empty) returns (HeatbeatResponse);
+    rpc Heartbeat (google.protobuf.Empty) returns (HeartbeatResponse);
     // Search neighbors from query vector.
     rpc Search(SearchRequest) returns (SearchResponse);
     // Search neighbors from ID.

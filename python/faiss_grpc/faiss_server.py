@@ -8,7 +8,7 @@ import numpy as np
 from faiss import Index
 
 from faiss_grpc.proto.faiss_pb2 import (
-    HeatbeatResponse,
+    HeartbeatResponse,
     Neighbor,
     SearchByIdResponse,
     SearchResponse,
@@ -82,8 +82,8 @@ class FaissServiceServicer(FaissServiceServicer):
 
         return SearchByIdResponse(request_id=request_id, neighbors=neighbors)
 
-    def Heatbeat(self, request, context) -> HeatbeatResponse:
-        return HeatbeatResponse(message='OK')
+    def Heartbeat(self, request, context) -> HeartbeatResponse:
+        return HeartbeatResponse(message='OK')
 
     @staticmethod
     def normalize(vec: np.ndarray) -> np.ndarray:

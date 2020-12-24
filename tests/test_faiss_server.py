@@ -22,7 +22,7 @@ from faiss_grpc.faiss_server import (
 )
 from faiss_grpc.proto import faiss_pb2, faiss_pb2_grpc
 from faiss_grpc.proto.faiss_pb2 import (
-    HeatbeatResponse,
+    HeartbeatResponse,
     Neighbor,
     SearchByIdRequest,
     SearchByIdResponse,
@@ -45,7 +45,7 @@ class FaissConfig:
 class ServiceMethodDescriptor(Enum):
     search = 'Search'
     search_by_id = 'SearchById'
-    heatbeat = 'Heatbeat'
+    heartbeat = 'Heartbeat'
 
 
 class GrpcClientForTesting:
@@ -66,8 +66,8 @@ class GrpcClientForTesting:
         req = faiss_pb2.SearchByIdRequest(id=request_id, k=k)
         return self.stub.SearchById(req)
 
-    def heatbeat(self) -> HeatbeatResponse:
-        return self.stub.Heatbeat(Empty())
+    def heartbeat(self) -> HeartbeatResponse:
+        return self.stub.Heartbeat(Empty())
 
 
 class BaseTestCase(unittest.TestCase):
@@ -306,10 +306,10 @@ class TestFaissServiceServicer(BaseTestCase):
         self.assertEqual(response, SearchByIdResponse())
         self.assertIs(code, grpc.StatusCode.INVALID_ARGUMENT)
 
-    def test_successful_Heatbeat(self) -> None:
+    def test_successful_Heartbeat(self) -> None:
         request = Empty()
         rpc = self.SERVER.invoke_unary_unary(
-            self.method_descriptor_by_name(ServiceMethodDescriptor.heatbeat),
+            self.method_descriptor_by_name(ServiceMethodDescriptor.heartbeat),
             (),
             request,
             None,
@@ -317,7 +317,7 @@ class TestFaissServiceServicer(BaseTestCase):
 
         response, _, code, _ = rpc.termination()
 
-        self.assertEqual(HeatbeatResponse(message='OK'), response)
+        self.assertEqual(HeartbeatResponse(message='OK'), response)
         self.assertIs(code, grpc.StatusCode.OK)
 
 
@@ -366,8 +366,8 @@ class TestServer(BaseTestCase):
         self.assertEqual(len(response.neighbors), k)
 
     def test_serve_heatbeat(self) -> None:
-        response = self.CLIENT.heatbeat()
-        self.assertEqual(response, HeatbeatResponse(message='OK'))
+        response = self.CLIENT.heartbeat()
+        self.assertEqual(response, HeartbeatResponse(message='OK'))
 
 
 if __name__ == "__main__":
