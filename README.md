@@ -2,7 +2,7 @@
 
 [![GitHub Actions Status](https://github.com/KanchiShimono/python-faiss-grpc-server/workflows/Build/badge.svg)](https://github.com/KanchiShimono/python-faiss-grpc-server/actions?query=workflow%3ABuild)
 
-Python gRPC server for apploximate nearest neighbor by [Faiss](https://github.com/facebookresearch/faiss).
+Python gRPC server for approximate nearest neighbor by [Faiss](https://github.com/facebookresearch/faiss).
 
 ## Installation
 
@@ -59,8 +59,8 @@ cd examples
 # show usage of client example
 python client.py -h
 
-# show heatbeat message
-python client.py heatbeat
+# show heartbeat message
+python client.py heartbeat
 
 # search by query, get numer of neighbors given value (query is auto generated in command as identity vector)
 python client.py search 10
