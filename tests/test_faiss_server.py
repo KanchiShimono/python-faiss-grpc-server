@@ -365,7 +365,7 @@ class TestServer(BaseTestCase):
         self.assertEqual(response.request_id, request_id)
         self.assertEqual(len(response.neighbors), k)
 
-    def test_serve_heatbeat(self) -> None:
+    def test_serve_heartbeat(self) -> None:
         response = self.CLIENT.heartbeat()
         self.assertEqual(response, HeartbeatResponse(message='OK'))
 

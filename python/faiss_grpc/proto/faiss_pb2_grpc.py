@@ -16,42 +16,39 @@ class FaissServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Heartbeat = channel.unary_unary(
-                '/faiss.FaissService/Heartbeat',
-                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=faiss__pb2.HeartbeatResponse.FromString,
-                )
+            '/faiss.FaissService/Heartbeat',
+            request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            response_deserializer=faiss__pb2.HeartbeatResponse.FromString,
+        )
         self.Search = channel.unary_unary(
-                '/faiss.FaissService/Search',
-                request_serializer=faiss__pb2.SearchRequest.SerializeToString,
-                response_deserializer=faiss__pb2.SearchResponse.FromString,
-                )
+            '/faiss.FaissService/Search',
+            request_serializer=faiss__pb2.SearchRequest.SerializeToString,
+            response_deserializer=faiss__pb2.SearchResponse.FromString,
+        )
         self.SearchById = channel.unary_unary(
-                '/faiss.FaissService/SearchById',
-                request_serializer=faiss__pb2.SearchByIdRequest.SerializeToString,
-                response_deserializer=faiss__pb2.SearchByIdResponse.FromString,
-                )
+            '/faiss.FaissService/SearchById',
+            request_serializer=faiss__pb2.SearchByIdRequest.SerializeToString,
+            response_deserializer=faiss__pb2.SearchByIdResponse.FromString,
+        )
 
 
 class FaissServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Heartbeat(self, request, context):
-        """Check server is working.
-        """
+        """Check server is working."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Search(self, request, context):
-        """Search neighbors from query vector.
-        """
+        """Search neighbors from query vector."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SearchById(self, request, context):
-        """Search neighbors from ID.
-        """
+        """Search neighbors from ID."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -59,78 +56,115 @@ class FaissServiceServicer(object):
 
 def add_FaissServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Heartbeat': grpc.unary_unary_rpc_method_handler(
-                    servicer.Heartbeat,
-                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=faiss__pb2.HeartbeatResponse.SerializeToString,
-            ),
-            'Search': grpc.unary_unary_rpc_method_handler(
-                    servicer.Search,
-                    request_deserializer=faiss__pb2.SearchRequest.FromString,
-                    response_serializer=faiss__pb2.SearchResponse.SerializeToString,
-            ),
-            'SearchById': grpc.unary_unary_rpc_method_handler(
-                    servicer.SearchById,
-                    request_deserializer=faiss__pb2.SearchByIdRequest.FromString,
-                    response_serializer=faiss__pb2.SearchByIdResponse.SerializeToString,
-            ),
+        'Heartbeat': grpc.unary_unary_rpc_method_handler(
+            servicer.Heartbeat,
+            request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            response_serializer=faiss__pb2.HeartbeatResponse.SerializeToString,
+        ),
+        'Search': grpc.unary_unary_rpc_method_handler(
+            servicer.Search,
+            request_deserializer=faiss__pb2.SearchRequest.FromString,
+            response_serializer=faiss__pb2.SearchResponse.SerializeToString,
+        ),
+        'SearchById': grpc.unary_unary_rpc_method_handler(
+            servicer.SearchById,
+            request_deserializer=faiss__pb2.SearchByIdRequest.FromString,
+            response_serializer=faiss__pb2.SearchByIdResponse.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'faiss.FaissService', rpc_method_handlers)
+        'faiss.FaissService', rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class FaissService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Heartbeat(request,
+    def Heartbeat(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/faiss.FaissService/Heartbeat',
+            '/faiss.FaissService/Heartbeat',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             faiss__pb2.HeartbeatResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def Search(request,
+    def Search(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/faiss.FaissService/Search',
+            '/faiss.FaissService/Search',
             faiss__pb2.SearchRequest.SerializeToString,
             faiss__pb2.SearchResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def SearchById(request,
+    def SearchById(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/faiss.FaissService/SearchById',
+            '/faiss.FaissService/SearchById',
             faiss__pb2.SearchByIdRequest.SerializeToString,
             faiss__pb2.SearchByIdResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )

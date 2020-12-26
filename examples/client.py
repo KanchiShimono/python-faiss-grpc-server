@@ -37,19 +37,19 @@ class GrpcClient:
         for i, n in enumerate(res.neighbors):
             print(f'#{i}, id: {n.id}, score: {n.score}')
 
-    def heatbeat(self) -> None:
-        res = self.stub.Heatbeat(Empty())
+    def heartbeat(self) -> None:
+        res = self.stub.Heartbeat(Empty())
         print(f'message {res.message}')
 
 
-def heatbeat(_: Namespace) -> None:
+def heartbeat(_: Namespace) -> None:
     client = GrpcClient()
-    client.heatbeat()
+    client.heartbeat()
 
 
 def search(args: Namespace) -> None:
     client = GrpcClient()
-    query = np.ones(300, dtype=np.float32)
+    query = np.ones(64, dtype=np.float32)
     client.search(query, args.k)
 
 
@@ -62,8 +62,10 @@ def run() -> None:
     parser = argparse.ArgumentParser(description='gRPC client example')
     sub_parser = parser.add_subparsers(title='subcommands')
 
-    parser_heatbeat = sub_parser.add_parser('heatbeat', description='heatbeat')
-    parser_heatbeat.set_defaults(handler=heatbeat)
+    parser_heartbeat = sub_parser.add_parser(
+        'heartbeat', description='heartbeat'
+    )
+    parser_heartbeat.set_defaults(handler=heartbeat)
 
     parser_search = sub_parser.add_parser(
         'search',
@@ -87,7 +89,9 @@ def run() -> None:
     if hasattr(args, 'handler'):
         args.handler(args)
     else:
-        print('subcommand is required one of {heatbeat, search, search-by-id}')
+        print(
+            'subcommand is required one of {heartbeat, search, search-by-id}'
+        )
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 ## Table of Contents
 
 - [proto/faiss.proto](#proto/faiss.proto)
-    - [HeatbeatResponse](#faiss.HeatbeatResponse)
+    - [HeartbeatResponse](#faiss.HeartbeatResponse)
     - [Neighbor](#faiss.Neighbor)
     - [SearchByIdRequest](#faiss.SearchByIdRequest)
     - [SearchByIdResponse](#faiss.SearchByIdResponse)
@@ -25,10 +25,10 @@
 Messages for Faiss searching services.
 
 
-<a name="faiss.HeatbeatResponse"></a>
+<a name="faiss.HeartbeatResponse"></a>
 
-### HeatbeatResponse
-Response of heatbeat.
+### HeartbeatResponse
+Response of heartbeat.
 
 
 | Field | Type | Label | Description |
@@ -147,7 +147,7 @@ Wrapper message for list of float32. This keeps compatible for vectors used on F
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| Heatbeat | [.google.protobuf.Empty](#google.protobuf.Empty) | [HeatbeatResponse](#faiss.HeatbeatResponse) | Check server is working. |
+| Heartbeat | [.google.protobuf.Empty](#google.protobuf.Empty) | [HeartbeatResponse](#faiss.HeartbeatResponse) | Check server is working. |
 | Search | [SearchRequest](#faiss.SearchRequest) | [SearchResponse](#faiss.SearchResponse) | Search neighbors from query vector. |
 | SearchById | [SearchByIdRequest](#faiss.SearchByIdRequest) | [SearchByIdResponse](#faiss.SearchByIdResponse) | Search neighbors from ID. |
 
